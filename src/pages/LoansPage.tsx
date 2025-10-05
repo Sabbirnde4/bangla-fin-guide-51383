@@ -28,6 +28,7 @@ const LoansPage = () => {
   const [sortBy, setSortBy] = useState('interestRate');
   const [filterBank, setFilterBank] = useState('all');
   const [maxAmount, setMaxAmount] = useState('');
+  const [maxTenure, setMaxTenure] = useState('');
   const [activeTab, setActiveTab] = useState('all');
 
   const loanTypeIcons = {
@@ -46,9 +47,10 @@ const LoansPage = () => {
                            bank?.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesBank = filterBank === 'all' || product.bankId === filterBank;
       const matchesAmount = !maxAmount || product.loanAmount.max >= parseInt(maxAmount);
+      const matchesTenure = !maxTenure || product.tenure.max <= parseInt(maxTenure);
       const matchesType = activeTab === 'all' || product.loanType === activeTab;
       
-      return matchesSearch && matchesBank && matchesAmount && matchesType;
+      return matchesSearch && matchesBank && matchesAmount && matchesTenure && matchesType;
     });
 
     products.sort((a, b) => {
@@ -57,6 +59,8 @@ const LoansPage = () => {
           return a.interestRate.min - b.interestRate.min;
         case 'maxAmount':
           return b.loanAmount.max - a.loanAmount.max;
+        case 'tenure':
+          return a.tenure.min - b.tenure.min;
         case 'bankName':
           const bankA = getBankById(a.bankId)?.name || '';
           const bankB = getBankById(b.bankId)?.name || '';
@@ -67,7 +71,7 @@ const LoansPage = () => {
     });
 
     return products;
-  }, [searchTerm, sortBy, filterBank, maxAmount, activeTab]);
+  }, [searchTerm, sortBy, filterBank, maxAmount, maxTenure, activeTab]);
 
   const loanTypes = [
     { id: 'all', name: 'All Loans', icon: CreditCard },
@@ -112,7 +116,7 @@ const LoansPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-5">
             <div className="space-y-2">
               <Label htmlFor="search">Search Loans</Label>
               <div className="relative">
@@ -133,9 +137,10 @@ const LoansPage = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="interestRate">Interest Rate</SelectItem>
-                  <SelectItem value="maxAmount">Maximum Amount</SelectItem>
-                  <SelectItem value="bankName">Bank Name</SelectItem>
+                  <SelectItem value="interestRate">Interest Rate (Low to High)</SelectItem>
+                  <SelectItem value="maxAmount">Maximum Amount (High to Low)</SelectItem>
+                  <SelectItem value="tenure">Tenure (Short to Long)</SelectItem>
+                  <SelectItem value="bankName">Bank Name (A-Z)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -161,6 +166,16 @@ const LoansPage = () => {
                 placeholder="Amount in BDT"
                 value={maxAmount}
                 onChange={(e) => setMaxAmount(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="maxTenure">Max Tenure (months)</Label>
+              <Input
+                id="maxTenure"
+                type="number"
+                placeholder="Months"
+                value={maxTenure}
+                onChange={(e) => setMaxTenure(e.target.value)}
               />
             </div>
           </div>

@@ -24,6 +24,7 @@ const SavingsPage = () => {
   const [sortBy, setSortBy] = useState('interestRate');
   const [filterBank, setFilterBank] = useState('all');
   const [minDeposit, setMinDeposit] = useState('');
+  const [maxTenure, setMaxTenure] = useState('');
   const filteredAndSortedProducts = useMemo(() => {
     let products = savingsProducts.filter(product => {
       const bank = getBankById(product.bankId);
@@ -31,8 +32,9 @@ const SavingsPage = () => {
                            bank?.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesBank = filterBank === 'all' || product.bankId === filterBank;
       const matchesDeposit = !minDeposit || product.minimumDeposit <= parseInt(minDeposit);
+      const matchesTenure = !maxTenure || product.tenure.max <= parseInt(maxTenure);
       
-      return matchesSearch && matchesBank && matchesDeposit;
+      return matchesSearch && matchesBank && matchesDeposit && matchesTenure;
     });
 
     products.sort((a, b) => {
@@ -41,6 +43,8 @@ const SavingsPage = () => {
           return b.interestRate - a.interestRate;
         case 'minimumDeposit':
           return a.minimumDeposit - b.minimumDeposit;
+        case 'tenure':
+          return a.tenure.min - b.tenure.min;
         case 'bankName':
           const bankA = getBankById(a.bankId)?.name || '';
           const bankB = getBankById(b.bankId)?.name || '';
@@ -51,7 +55,7 @@ const SavingsPage = () => {
     });
 
     return products;
-  }, [searchTerm, sortBy, filterBank, minDeposit]);
+  }, [searchTerm, sortBy, filterBank, minDeposit, maxTenure]);
 
   return (
     <div className="container py-8">
@@ -71,7 +75,7 @@ const SavingsPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-5">
             <div className="space-y-2">
               <Label htmlFor="search">Search Products</Label>
               <div className="relative">
@@ -92,9 +96,10 @@ const SavingsPage = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="interestRate">Interest Rate</SelectItem>
-                  <SelectItem value="minimumDeposit">Minimum Deposit</SelectItem>
-                  <SelectItem value="bankName">Bank Name</SelectItem>
+                  <SelectItem value="interestRate">Interest Rate (High to Low)</SelectItem>
+                  <SelectItem value="minimumDeposit">Minimum Deposit (Low to High)</SelectItem>
+                  <SelectItem value="tenure">Tenure (Short to Long)</SelectItem>
+                  <SelectItem value="bankName">Bank Name (A-Z)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -120,6 +125,16 @@ const SavingsPage = () => {
                 placeholder="Amount in BDT"
                 value={minDeposit}
                 onChange={(e) => setMinDeposit(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="maxTenure">Max Tenure (months)</Label>
+              <Input
+                id="maxTenure"
+                type="number"
+                placeholder="Months"
+                value={maxTenure}
+                onChange={(e) => setMaxTenure(e.target.value)}
               />
             </div>
           </div>
