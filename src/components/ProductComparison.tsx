@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { X, GitCompare, ArrowRight } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { X, GitCompare, ArrowRight, TrendingUp, TrendingDown, Award } from 'lucide-react';
 import { SavingsProduct, LoanProduct, getBankById } from '@/data/mockData';
 import { formatCurrency, formatPercentage } from '@/utils/calculations';
 
@@ -37,11 +38,41 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
 
   const selectedProductsData = products.filter(p => selectedProducts.includes(p.id));
 
+  // Find best values for highlighting
+  const getBestValues = () => {
+    if (type === 'savings') {
+      const savingsData = selectedProductsData as SavingsProduct[];
+      return {
+        bestInterestRate: Math.max(...savingsData.map(p => p.interestRate)),
+        lowestMinDeposit: Math.min(...savingsData.map(p => p.minimumDeposit)),
+        lowestOpeningFee: Math.min(...savingsData.map(p => p.fees.accountOpening)),
+        lowestMaintenanceFee: Math.min(...savingsData.map(p => p.fees.maintenance)),
+      };
+    } else {
+      const loanData = selectedProductsData as LoanProduct[];
+      return {
+        lowestInterestRate: Math.min(...loanData.map(p => p.interestRate.min)),
+        highestMaxAmount: Math.max(...loanData.map(p => p.loanAmount.max)),
+        lowestProcessingFee: Math.min(...loanData.map(p => p.processingFee)),
+      };
+    }
+  };
+
   if (showComparison && selectedProductsData.length > 0) {
+    const bestValues = getBestValues();
+    
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-bold">Product Comparison</h3>
+          <div>
+            <h3 className="text-2xl font-bold flex items-center gap-2">
+              <GitCompare className="h-6 w-6" />
+              Product Comparison
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Best values are highlighted with <Award className="h-3 w-3 inline text-primary" />
+            </p>
+          </div>
           <Button variant="outline" onClick={() => setShowComparison(false)}>
             Back to List
           </Button>
@@ -55,20 +86,26 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute right-2 top-2"
+                  className="absolute right-2 top-2 z-10"
                   onClick={() => toggleProduct(product.id)}
                 >
                   <X className="h-4 w-4" />
                 </Button>
                 <CardHeader>
-                  <CardTitle className="text-lg">{product.productName}</CardTitle>
+                  <CardTitle className="text-lg pr-8">{product.productName}</CardTitle>
                   <p className="text-sm text-muted-foreground">{bank?.name}</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {type === 'savings' ? (
-                    <SavingsComparisonDetails product={product as SavingsProduct} />
+                    <SavingsComparisonDetails 
+                      product={product as SavingsProduct} 
+                      bestValues={bestValues}
+                    />
                   ) : (
-                    <LoanComparisonDetails product={product as LoanProduct} />
+                    <LoanComparisonDetails 
+                      product={product as LoanProduct}
+                      bestValues={bestValues}
+                    />
                   )}
                 </CardContent>
               </Card>
@@ -76,7 +113,7 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
           })}
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-4">
           <Button onClick={clearSelection} variant="outline">
             Clear All & Start Over
           </Button>
@@ -212,110 +249,204 @@ const LoanProductCard = ({ product }: { product: LoanProduct }) => (
   </div>
 );
 
-const SavingsComparisonDetails = ({ product }: { product: SavingsProduct }) => (
-  <div className="space-y-4">
-    <div className="text-center">
-      <div className="text-3xl font-bold text-primary">
-        {formatPercentage(product.interestRate)}
-      </div>
-      <p className="text-sm text-muted-foreground capitalize">
-        {product.compoundingFrequency} compounding
-      </p>
-    </div>
-    
-    <div className="space-y-3">
-      <div>
-        <h4 className="font-medium mb-2">Deposit Range</h4>
-        <p className="text-sm">
-          {formatCurrency(product.minimumDeposit)} - {formatCurrency(product.maximumDeposit)}
-        </p>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Tenure</h4>
-        <p className="text-sm">{product.tenure.min} - {product.tenure.max} months</p>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Fees</h4>
-        <div className="text-sm space-y-1">
-          <div className="flex justify-between">
-            <span>Opening:</span>
-            <span>{formatCurrency(product.fees.accountOpening)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Maintenance:</span>
-            <span>{formatCurrency(product.fees.maintenance)}/month</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Withdrawal:</span>
-            <span>{formatCurrency(product.fees.withdrawal)}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Features</h4>
-        <div className="flex flex-wrap gap-1">
-          {product.features.slice(0, 3).map((feature, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {feature}
-            </Badge>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-);
+const SavingsComparisonDetails = ({ product, bestValues }: { 
+  product: SavingsProduct;
+  bestValues: any;
+}) => {
+  const isBestRate = product.interestRate === bestValues.bestInterestRate;
+  const isBestMinDeposit = product.minimumDeposit === bestValues.lowestMinDeposit;
+  const isBestOpeningFee = product.fees.accountOpening === bestValues.lowestOpeningFee;
+  const isBestMaintenanceFee = product.fees.maintenance === bestValues.lowestMaintenanceFee;
 
-const LoanComparisonDetails = ({ product }: { product: LoanProduct }) => (
-  <div className="space-y-4">
-    <div className="text-center">
-      <div className="text-3xl font-bold text-primary">
-        {formatPercentage(product.interestRate.min)}-{formatPercentage(product.interestRate.max)}
-      </div>
-      <p className="text-sm text-muted-foreground capitalize">
-        {product.loanType} loan
-      </p>
-    </div>
-    
-    <div className="space-y-3">
-      <div>
-        <h4 className="font-medium mb-2">Loan Amount</h4>
-        <p className="text-sm">
-          {formatCurrency(product.loanAmount.min)} - {formatCurrency(product.loanAmount.max)}
+  return (
+    <div className="space-y-4">
+      <div className="text-center p-3 bg-muted/50 rounded-lg">
+        <div className="flex items-center justify-center gap-2">
+          <div className="text-3xl font-bold text-primary">
+            {formatPercentage(product.interestRate)}
+          </div>
+          {isBestRate && <Award className="h-5 w-5 text-primary" />}
+        </div>
+        <p className="text-sm text-muted-foreground capitalize">
+          {product.compoundingFrequency} compounding
         </p>
       </div>
       
-      <div>
-        <h4 className="font-medium mb-2">Tenure</h4>
-        <p className="text-sm">{product.tenure.min} - {product.tenure.max} months</p>
-      </div>
+      <Separator />
       
-      <div>
-        <h4 className="font-medium mb-2">Processing</h4>
-        <div className="text-sm space-y-1">
-          <div className="flex justify-between">
-            <span>Fee:</span>
-            <span>{product.processingFee}%</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Time:</span>
-            <span>{product.processingTime}</span>
+      <div className="space-y-3">
+        <div>
+          <h4 className="font-medium mb-2 text-sm">Deposit Range</h4>
+          <div className="text-sm space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Min:</span>
+              <div className="flex items-center gap-2">
+                <span className={isBestMinDeposit ? 'font-semibold text-primary' : ''}>
+                  {formatCurrency(product.minimumDeposit)}
+                </span>
+                {isBestMinDeposit && <Award className="h-3 w-3 text-primary" />}
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Max:</span>
+              <span>{formatCurrency(product.maximumDeposit)}</span>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Features</h4>
-        <div className="flex flex-wrap gap-1">
-          {product.features.slice(0, 3).map((feature, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {feature}
-            </Badge>
-          ))}
+        
+        <Separator />
+        
+        <div>
+          <h4 className="font-medium mb-2 text-sm">Tenure</h4>
+          <p className="text-sm">{product.tenure.min} - {product.tenure.max} months</p>
+        </div>
+        
+        <Separator />
+        
+        <div>
+          <h4 className="font-medium mb-2 text-sm">Fees</h4>
+          <div className="text-sm space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Opening:</span>
+              <div className="flex items-center gap-2">
+                <span className={isBestOpeningFee ? 'font-semibold text-primary' : ''}>
+                  {formatCurrency(product.fees.accountOpening)}
+                </span>
+                {isBestOpeningFee && <Award className="h-3 w-3 text-primary" />}
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Maintenance:</span>
+              <div className="flex items-center gap-2">
+                <span className={isBestMaintenanceFee ? 'font-semibold text-primary' : ''}>
+                  {formatCurrency(product.fees.maintenance)}/mo
+                </span>
+                {isBestMaintenanceFee && <Award className="h-3 w-3 text-primary" />}
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Withdrawal:</span>
+              <span>{formatCurrency(product.fees.withdrawal)}</span>
+            </div>
+          </div>
+        </div>
+        
+        <Separator />
+        
+        <div>
+          <h4 className="font-medium mb-2 text-sm">Key Features</h4>
+          <div className="flex flex-wrap gap-1">
+            {product.features.slice(0, 4).map((feature, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                {feature}
+              </Badge>
+            ))}
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
+
+const LoanComparisonDetails = ({ product, bestValues }: { 
+  product: LoanProduct;
+  bestValues: any;
+}) => {
+  const isBestRate = product.interestRate.min === bestValues.lowestInterestRate;
+  const isBestAmount = product.loanAmount.max === bestValues.highestMaxAmount;
+  const isBestProcessingFee = product.processingFee === bestValues.lowestProcessingFee;
+
+  return (
+    <div className="space-y-4">
+      <div className="text-center p-3 bg-muted/50 rounded-lg">
+        <div className="flex items-center justify-center gap-2">
+          <div className="text-3xl font-bold text-primary">
+            {formatPercentage(product.interestRate.min)}-{formatPercentage(product.interestRate.max)}
+          </div>
+          {isBestRate && <Award className="h-5 w-5 text-primary" />}
+        </div>
+        <p className="text-sm text-muted-foreground capitalize">
+          {product.loanType} loan
+        </p>
+      </div>
+      
+      <Separator />
+      
+      <div className="space-y-3">
+        <div>
+          <h4 className="font-medium mb-2 text-sm">Loan Amount</h4>
+          <div className="text-sm space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Min:</span>
+              <span>{formatCurrency(product.loanAmount.min)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Max:</span>
+              <div className="flex items-center gap-2">
+                <span className={isBestAmount ? 'font-semibold text-primary' : ''}>
+                  {formatCurrency(product.loanAmount.max)}
+                </span>
+                {isBestAmount && <Award className="h-3 w-3 text-primary" />}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <Separator />
+        
+        <div>
+          <h4 className="font-medium mb-2 text-sm">Tenure</h4>
+          <p className="text-sm">{product.tenure.min} - {product.tenure.max} months</p>
+        </div>
+        
+        <Separator />
+        
+        <div>
+          <h4 className="font-medium mb-2 text-sm">Processing</h4>
+          <div className="text-sm space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Fee:</span>
+              <div className="flex items-center gap-2">
+                <span className={isBestProcessingFee ? 'font-semibold text-primary' : ''}>
+                  {product.processingFee}%
+                </span>
+                {isBestProcessingFee && <Award className="h-3 w-3 text-primary" />}
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Time:</span>
+              <span>{product.processingTime}</span>
+            </div>
+          </div>
+        </div>
+        
+        <Separator />
+        
+        <div>
+          <h4 className="font-medium mb-2 text-sm">Key Features</h4>
+          <div className="flex flex-wrap gap-1">
+            {product.features.slice(0, 4).map((feature, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                {feature}
+              </Badge>
+            ))}
+          </div>
+        </div>
+        
+        <Separator />
+        
+        <div>
+          <h4 className="font-medium mb-2 text-sm">Required Documents</h4>
+          <ul className="text-xs text-muted-foreground space-y-1">
+            {product.requiredDocuments.slice(0, 3).map((doc, index) => (
+              <li key={index}>• {doc}</li>
+            ))}
+            {product.requiredDocuments.length > 3 && (
+              <li className="text-primary">+ {product.requiredDocuments.length - 3} more</li>
+            )}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
