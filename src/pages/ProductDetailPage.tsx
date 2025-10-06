@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,12 +17,20 @@ import {
   DollarSign
 } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/utils/calculations';
+import { ReviewList } from '@/components/reviews/ReviewList';
+import { ReviewForm } from '@/components/reviews/ReviewForm';
+import { ReviewStats } from '@/components/reviews/ReviewStats';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 type ProductType = 'savings' | 'loans';
 
 export default function ProductDetailPage() {
   const { type, id } = useParams<{ type: ProductType; id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const isSavings = type === 'savings';
   const tableName = isSavings ? 'savings_products' : 'loan_products';
@@ -39,6 +47,118 @@ export default function ProductDetailPage() {
       return data;
     },
   });
+
+  // Fetch reviews
+  const { data: reviews = [], isLoading: reviewsLoading } = useQuery({
+    queryKey: ['product-reviews', id, type],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_reviews' as any)
+        .select('*, profiles(first_name, last_name)')
+        .eq('product_id', id)
+        .eq('product_type', type)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+
+  // Check if user has already reviewed
+  const { data: userReview } = useQuery({
+    queryKey: ['user-product-review', id, type, user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from('product_reviews' as any)
+        .select('*')
+        .eq('product_id', id)
+        .eq('product_type', type)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+    enabled: !!user,
+  });
+
+  // Submit review mutation
+  const submitReviewMutation = useMutation({
+    mutationFn: async ({ rating, comment }: { rating: number; comment: string }) => {
+      if (!user) throw new Error('Must be logged in');
+      
+      const reviewData = {
+        user_id: user.id,
+        product_id: id,
+        product_type: type,
+        rating,
+        comment,
+      };
+
+      if (userReview) {
+        const { error } = await supabase
+          .from('product_reviews' as any)
+          .update({ rating, comment })
+          .eq('id', userReview.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('product_reviews' as any)
+          .insert(reviewData);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-reviews', id, type] });
+      queryClient.invalidateQueries({ queryKey: ['user-product-review', id, type, user?.id] });
+      toast({
+        title: 'Success',
+        description: userReview ? 'Review updated successfully' : 'Review submitted successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to submit review. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete review mutation
+  const deleteReviewMutation = useMutation({
+    mutationFn: async (reviewId: string) => {
+      const { error } = await supabase
+        .from('product_reviews' as any)
+        .delete()
+        .eq('id', reviewId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-reviews', id, type] });
+      queryClient.invalidateQueries({ queryKey: ['user-product-review', id, type, user?.id] });
+      toast({
+        title: 'Success',
+        description: 'Review deleted successfully',
+      });
+    },
+  });
+
+  // Calculate review stats
+  const reviewStats = reviews.reduce(
+    (acc, review) => {
+      acc.total++;
+      acc.sum += review.rating;
+      acc.distribution[review.rating as keyof typeof acc.distribution]++;
+      return acc;
+    },
+    {
+      total: 0,
+      sum: 0,
+      distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    }
+  );
+
+  const averageRating = reviewStats.total > 0 ? reviewStats.sum / reviewStats.total : 0;
 
   if (productLoading) {
     return (
@@ -336,6 +456,50 @@ export default function ProductDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Reviews Section */}
+      <div className="mt-12 space-y-8">
+        <h2 className="text-3xl font-bold">Reviews & Ratings</h2>
+        
+        {reviewStats.total > 0 && (
+          <ReviewStats
+            averageRating={averageRating}
+            totalReviews={reviewStats.total}
+            ratingDistribution={reviewStats.distribution}
+          />
+        )}
+
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div>
+            <ReviewForm
+              onSubmit={(rating, comment) =>
+                submitReviewMutation.mutate({ rating, comment })
+              }
+              isSubmitting={submitReviewMutation.isPending}
+              existingReview={userReview ? {
+                rating: userReview.rating,
+                comment: userReview.comment,
+              } : undefined}
+              title={userReview ? 'Update Your Review' : 'Write a Review'}
+            />
+          </div>
+          
+          <div>
+            <h3 className="text-xl font-semibold mb-4">User Reviews</h3>
+            {reviewsLoading ? (
+              <div className="flex justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <ReviewList
+                reviews={reviews}
+                onDeleteReview={(reviewId) => deleteReviewMutation.mutate(reviewId)}
+                isDeleting={deleteReviewMutation.isPending}
+              />
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
