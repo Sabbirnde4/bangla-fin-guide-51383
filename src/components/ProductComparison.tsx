@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +15,7 @@ interface ProductComparisonProps {
 }
 
 export const ProductComparison = ({ type, products }: ProductComparisonProps) => {
+  const navigate = useNavigate();
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState(false);
 
@@ -82,12 +84,19 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
           {selectedProductsData.map((product) => {
             const bank = getBankById(product.bankId);
             return (
-              <Card key={product.id} className="relative">
+              <Card 
+                key={product.id} 
+                className="relative cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate(`/${type}/${product.id}`)}
+              >
                 <Button
                   variant="ghost"
                   size="sm"
                   className="absolute right-2 top-2 z-10"
-                  onClick={() => toggleProduct(product.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleProduct(product.id);
+                  }}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -163,11 +172,15 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
           return (
             <Card 
               key={product.id} 
-              className={`relative transition-all ${
+              className={`relative transition-all cursor-pointer hover:shadow-lg ${
                 isSelected ? 'ring-2 ring-primary' : ''
               } ${!canSelect ? 'opacity-50' : ''}`}
+              onClick={() => navigate(`/${type}/${product.id}`)}
             >
-              <div className="absolute top-4 right-4">
+              <div 
+                className="absolute top-4 right-4 z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Checkbox
                   checked={isSelected}
                   onCheckedChange={() => canSelect && toggleProduct(product.id)}
