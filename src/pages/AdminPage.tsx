@@ -17,6 +17,7 @@ import {
   TrendingUp, Activity, Shield, Database, Eye, Settings,
   UserCheck, UserX, AlertTriangle, CheckCircle
 } from 'lucide-react';
+import DataUpload from '@/components/admin/DataUpload';
 
 interface Bank {
   id: string;
@@ -435,83 +436,87 @@ export default function AdminPage() {
             </Card>
           </div>
 
-          <Card className="border-primary/20 bg-primary/5">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Database className="h-5 w-5 text-primary" />
-                <div>
-                  <CardTitle>Data Seeding System</CardTitle>
-                  <CardDescription>Populate database with mock data for testing</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2 text-sm">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  <span>40+ Banks from Bangladesh</span>
+                  <Database className="h-5 w-5 text-primary" />
+                  <div>
+                    <CardTitle>Data Seeding System</CardTitle>
+                    <CardDescription>Populate database with mock data for testing</CardDescription>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  <span>30+ NBFIs (Non-Bank Financial Institutions)</span>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    <span>40+ Banks from Bangladesh</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    <span>30+ NBFIs (Non-Bank Financial Institutions)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    <span>10+ NGOs with microfinance programs</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    <span>100+ Savings products with detailed information</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    <span>60+ Loan products across multiple categories</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  <span>10+ NGOs with microfinance programs</span>
+                
+                <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                  <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5" />
+                  <p className="text-xs text-muted-foreground">
+                    This will add all mock data to your database. Existing records with the same IDs will be updated (upserted).
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  <span>100+ Savings products with detailed information</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  <span>60+ Loan products across multiple categories</span>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-                <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5" />
-                <p className="text-xs text-muted-foreground">
-                  This will add all mock data to your database. Existing records with the same IDs will be updated (upserted).
-                </p>
-              </div>
 
-              <Button 
-                onClick={async () => {
-                  try {
-                    toast({
-                      title: "Seeding database...",
-                      description: "Importing mock data. This may take a few moments.",
-                    });
+                <Button 
+                  onClick={async () => {
+                    try {
+                      toast({
+                        title: "Seeding database...",
+                        description: "Importing mock data. This may take a few moments.",
+                      });
 
-                    const { data, error } = await supabase.functions.invoke('populate-database', {
-                      method: 'POST'
-                    });
+                      const { data, error } = await supabase.functions.invoke('populate-database', {
+                        method: 'POST'
+                      });
 
-                    if (error) throw error;
-                    
-                    fetchData();
-                    toast({
-                      title: "✅ Database seeded successfully!",
-                      description: `Added ${data.stats?.banks || 0} banks, ${data.stats?.nbfis || 0} NBFIs, ${data.stats?.ngos || 0} NGOs, ${data.stats?.savingsProducts || 0} savings products, and ${data.stats?.loanProducts || 0} loan products.`,
-                    });
-                  } catch (error) {
-                    console.error('Error seeding database:', error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to seed database. Please try again.",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                className="w-full"
-                size="lg"
-              >
-                <Database className="mr-2 h-4 w-4" />
-                Seed Database with Mock Data
-              </Button>
-            </CardContent>
-          </Card>
+                      if (error) throw error;
+                      
+                      fetchData();
+                      toast({
+                        title: "✅ Database seeded successfully!",
+                        description: `Added ${data.stats?.banks || 0} banks, ${data.stats?.nbfis || 0} NBFIs, ${data.stats?.ngos || 0} NGOs, ${data.stats?.savingsProducts || 0} savings products, and ${data.stats?.loanProducts || 0} loan products.`,
+                      });
+                    } catch (error) {
+                      console.error('Error seeding database:', error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to seed database. Please try again.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  className="w-full"
+                  size="lg"
+                >
+                  <Database className="mr-2 h-4 w-4" />
+                  Seed Database with Mock Data
+                </Button>
+              </CardContent>
+            </Card>
+
+            <DataUpload />
+          </div>
 
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
