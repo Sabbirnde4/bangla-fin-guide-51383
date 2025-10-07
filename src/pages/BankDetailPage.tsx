@@ -22,6 +22,7 @@ import { formatCurrency, formatPercentage } from '@/utils/calculations';
 import { ReviewList } from '@/components/reviews/ReviewList';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ReviewStats } from '@/components/reviews/ReviewStats';
+import { AlertForm } from '@/components/alerts/AlertForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -156,6 +157,45 @@ export default function BankDetailPage() {
       toast({
         title: 'Success',
         description: 'Review deleted successfully',
+      });
+    },
+  });
+
+  // Alert management
+  const createAlertMutation = useMutation({
+    mutationFn: async (alert: { condition_type: string; threshold_value: number | null }) => {
+      if (!user) throw new Error('Must be logged in');
+      
+      // Calculate average rate from bank's products
+      const avgRate = bank && savingsProducts && savingsProducts.length > 0
+        ? savingsProducts.reduce((sum, p) => sum + p.interest_rate, 0) / savingsProducts.length
+        : 0;
+      
+      const { error } = await supabase
+        .from('alerts' as any)
+        .insert({
+          user_id: user.id,
+          alert_type: 'bank',
+          target_id: id,
+          target_name: bank?.name || '',
+          condition_type: alert.condition_type,
+          threshold_value: alert.threshold_value,
+          current_value: avgRate,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Alert created',
+        description: 'You will be notified when rates change.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to create alert',
+        description: error.message,
+        variant: 'destructive',
       });
     },
   });
@@ -424,6 +464,23 @@ export default function BankDetailPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Rate Alerts Section */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-6">Rate Alerts</h2>
+        <AlertForm
+          alertType="bank"
+          targetId={id!}
+          targetName={bank.name}
+          currentRate={
+            savingsProducts && savingsProducts.length > 0
+              ? savingsProducts.reduce((sum, p) => sum + p.interest_rate, 0) / savingsProducts.length
+              : 0
+          }
+          onSubmit={(alert) => createAlertMutation.mutate(alert)}
+          isSubmitting={createAlertMutation.isPending}
+        />
+      </div>
 
       {/* Reviews Section */}
       <div className="mt-12 space-y-8">

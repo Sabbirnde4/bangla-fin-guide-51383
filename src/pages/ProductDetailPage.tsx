@@ -20,6 +20,7 @@ import { formatCurrency, formatPercentage } from '@/utils/calculations';
 import { ReviewList } from '@/components/reviews/ReviewList';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ReviewStats } from '@/components/reviews/ReviewStats';
+import { AlertForm } from '@/components/alerts/AlertForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -139,6 +140,40 @@ export default function ProductDetailPage() {
       toast({
         title: 'Success',
         description: 'Review deleted successfully',
+      });
+    },
+  });
+
+  // Alert management
+  const createAlertMutation = useMutation({
+    mutationFn: async (alert: { condition_type: string; threshold_value: number | null }) => {
+      if (!user) throw new Error('Must be logged in');
+      
+      const { error } = await supabase
+        .from('alerts' as any)
+        .insert({
+          user_id: user.id,
+          alert_type: 'product',
+          target_id: id,
+          target_name: `${product?.product_name} - ${product?.banks?.name}`,
+          condition_type: alert.condition_type,
+          threshold_value: alert.threshold_value,
+          current_value: isSavings ? (product as any)?.interest_rate || 0 : (product as any)?.interest_rate_min || 0,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Alert created',
+        description: 'You will be notified when the rate changes.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to create alert',
+        description: error.message,
+        variant: 'destructive',
       });
     },
   });
@@ -456,6 +491,19 @@ export default function ProductDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Rate Alerts Section */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-6">Rate Alerts</h2>
+        <AlertForm
+          alertType="product"
+          targetId={id!}
+          targetName={`${product.product_name} - ${product.banks?.name}`}
+          currentRate={isSavings ? (product as any).interest_rate : (product as any).interest_rate_min}
+          onSubmit={(alert) => createAlertMutation.mutate(alert)}
+          isSubmitting={createAlertMutation.isPending}
+        />
+      </div>
 
       {/* Reviews Section */}
       <div className="mt-12 space-y-8">
