@@ -435,57 +435,80 @@ export default function AdminPage() {
             </Card>
           </div>
 
-          <Card>
+          <Card className="border-primary/20 bg-primary/5">
             <CardHeader>
-              <CardTitle>Database Management</CardTitle>
-              <CardDescription>Populate database with mock data</CardDescription>
+              <div className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-primary" />
+                <div>
+                  <CardTitle>Data Seeding System</CardTitle>
+                  <CardDescription>Populate database with mock data for testing</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Click the button below to populate the database with sample banks, NBFIs, NGOs, savings products, and loan products.
-              </p>
+            <CardContent className="space-y-4">
+              <div className="grid gap-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  <span>40+ Banks from Bangladesh</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  <span>30+ NBFIs (Non-Bank Financial Institutions)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  <span>10+ NGOs with microfinance programs</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  <span>100+ Savings products with detailed information</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  <span>60+ Loan products across multiple categories</span>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5" />
+                <p className="text-xs text-muted-foreground">
+                  This will add all mock data to your database. Existing records with the same IDs will be updated (upserted).
+                </p>
+              </div>
+
               <Button 
                 onClick={async () => {
                   try {
                     toast({
-                      title: "Populating database...",
-                      description: "This may take a few moments.",
+                      title: "Seeding database...",
+                      description: "Importing mock data. This may take a few moments.",
                     });
 
-                    const response = await fetch(
-                      `https://oxnvxljwcukaguznuqwc.supabase.co/functions/v1/populate-database`,
-                      {
-                        method: 'POST',
-                        headers: {
-                          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94bnZ4bGp3Y3VrYWd1em51cXdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcyMDM1NzcsImV4cCI6MjA3Mjc3OTU3N30.qJFP7eUHtfYcX3qRDDME1BMPtPdwYGkcaAF9l85OQ3M`,
-                        },
-                      }
-                    );
+                    const { data, error } = await supabase.functions.invoke('populate-database', {
+                      method: 'POST'
+                    });
 
-                    if (!response.ok) {
-                      throw new Error('Failed to populate database');
-                    }
-
-                    const result = await response.json();
+                    if (error) throw error;
                     
                     fetchData();
                     toast({
-                      title: "Database populated!",
-                      description: `Successfully added ${result.stats?.banks || 0} banks, ${result.stats?.savingsProducts || 0} savings products, ${result.stats?.loanProducts || 0} loan products, and more.`,
+                      title: "✅ Database seeded successfully!",
+                      description: `Added ${data.stats?.banks || 0} banks, ${data.stats?.nbfis || 0} NBFIs, ${data.stats?.ngos || 0} NGOs, ${data.stats?.savingsProducts || 0} savings products, and ${data.stats?.loanProducts || 0} loan products.`,
                     });
                   } catch (error) {
-                    console.error('Error populating database:', error);
+                    console.error('Error seeding database:', error);
                     toast({
                       title: "Error",
-                      description: "Failed to populate database. Please try again.",
+                      description: "Failed to seed database. Please try again.",
                       variant: "destructive",
                     });
                   }
                 }}
                 className="w-full"
+                size="lg"
               >
                 <Database className="mr-2 h-4 w-4" />
-                Populate Database with Mock Data
+                Seed Database with Mock Data
               </Button>
             </CardContent>
           </Card>

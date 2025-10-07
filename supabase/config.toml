@@ -1,1 +1,4 @@
 project_id = "oxnvxljwcukaguznuqwc"
+
+[functions.populate-database]
+verify_jwt = false
