@@ -44,25 +44,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fetch user profile and role
           setTimeout(async () => {
             try {
-              const [profileResponse, roleResponse] = await Promise.all([
+              const [profileResponse, rolesResponse] = await Promise.all([
                 supabase
                   .from('profiles')
                   .select('*')
                   .eq('user_id', session.user.id)
-                  .single(),
+                  .maybeSingle(),
                 supabase
                   .from('user_roles')
                   .select('role')
                   .eq('user_id', session.user.id)
-                  .single()
               ]);
 
               if (profileResponse.data) {
                 setProfile(profileResponse.data);
               }
               
-              if (roleResponse.data) {
-                setUserRole(roleResponse.data.role);
+              // Check if user has admin role (prioritize admin over user)
+              if (rolesResponse.data && rolesResponse.data.length > 0) {
+                const roles = rolesResponse.data.map((r: any) => r.role);
+                setUserRole(roles.includes('admin') ? 'admin' : 'user');
               }
             } catch (error) {
               console.error('Error fetching user data:', error);
