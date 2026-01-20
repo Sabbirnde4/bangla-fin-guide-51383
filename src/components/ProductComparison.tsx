@@ -1,23 +1,76 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { X, GitCompare, ArrowRight, TrendingUp, TrendingDown, Award } from 'lucide-react';
-import { SavingsProduct, LoanProduct, getBankById } from '@/data/mockData';
+import { X, GitCompare, Award } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/utils/calculations';
+
+// Define local interfaces that match the database schema
+interface TransformedSavingsProduct {
+  id: string;
+  bankId: string;
+  productName: string;
+  interestRate: number;
+  minimumDeposit: number;
+  maximumDeposit: number;
+  tenure: { min: number; max: number };
+  features: string[];
+  compoundingFrequency: string;
+  fees: {
+    accountOpening: number;
+    maintenance: number;
+    withdrawal: number;
+  };
+  eligibility: string[];
+}
+
+interface TransformedLoanProduct {
+  id: string;
+  bankId: string;
+  productName: string;
+  loanType: string;
+  interestRate: { min: number; max: number };
+  loanAmount: { min: number; max: number };
+  tenure: { min: number; max: number };
+  processingFee: number;
+  processingTime: string;
+  features: string[];
+  eligibility: string[];
+  requiredDocuments: string[];
+}
+
+type ProductType = TransformedSavingsProduct | TransformedLoanProduct;
 
 interface ProductComparisonProps {
   type: 'savings' | 'loans';
-  products: (SavingsProduct | LoanProduct)[];
+  products: ProductType[];
 }
 
 export const ProductComparison = ({ type, products }: ProductComparisonProps) => {
   const navigate = useNavigate();
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState(false);
+
+  // Fetch banks from Supabase for name lookup
+  const { data: banks } = useQuery({
+    queryKey: ['banks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('banks')
+        .select('id, name');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const getBankById = (bankId: string) => {
+    return banks?.find(bank => bank.id === bankId);
+  };
 
   const toggleProduct = (productId: string) => {
     setSelectedProducts(prev => 
@@ -43,7 +96,7 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
   // Find best values for highlighting
   const getBestValues = () => {
     if (type === 'savings') {
-      const savingsData = selectedProductsData as SavingsProduct[];
+      const savingsData = selectedProductsData as TransformedSavingsProduct[];
       return {
         bestInterestRate: Math.max(...savingsData.map(p => p.interestRate)),
         lowestMinDeposit: Math.min(...savingsData.map(p => p.minimumDeposit)),
@@ -51,7 +104,7 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
         lowestMaintenanceFee: Math.min(...savingsData.map(p => p.fees.maintenance)),
       };
     } else {
-      const loanData = selectedProductsData as LoanProduct[];
+      const loanData = selectedProductsData as TransformedLoanProduct[];
       return {
         lowestInterestRate: Math.min(...loanData.map(p => p.interestRate.min)),
         highestMaxAmount: Math.max(...loanData.map(p => p.loanAmount.max)),
@@ -107,12 +160,12 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
                 <CardContent className="space-y-4">
                   {type === 'savings' ? (
                     <SavingsComparisonDetails 
-                      product={product as SavingsProduct} 
+                      product={product as TransformedSavingsProduct} 
                       bestValues={bestValues}
                     />
                   ) : (
                     <LoanComparisonDetails 
-                      product={product as LoanProduct}
+                      product={product as TransformedLoanProduct}
                       bestValues={bestValues}
                     />
                   )}
@@ -193,9 +246,9 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
               </CardHeader>
               <CardContent>
                 {type === 'savings' ? (
-                  <SavingsProductCard product={product as SavingsProduct} />
+                  <SavingsProductCard product={product as TransformedSavingsProduct} />
                 ) : (
-                  <LoanProductCard product={product as LoanProduct} />
+                  <LoanProductCard product={product as TransformedLoanProduct} />
                 )}
               </CardContent>
             </Card>
@@ -206,7 +259,7 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
   );
 };
 
-const SavingsProductCard = ({ product }: { product: SavingsProduct }) => (
+const SavingsProductCard = ({ product }: { product: TransformedSavingsProduct }) => (
   <div className="space-y-3">
     <div className="flex justify-between items-center">
       <span className="text-2xl font-bold text-primary">
@@ -233,7 +286,7 @@ const SavingsProductCard = ({ product }: { product: SavingsProduct }) => (
   </div>
 );
 
-const LoanProductCard = ({ product }: { product: LoanProduct }) => (
+const LoanProductCard = ({ product }: { product: TransformedLoanProduct }) => (
   <div className="space-y-3">
     <div className="flex justify-between items-center">
       <span className="text-2xl font-bold text-primary">
@@ -263,7 +316,7 @@ const LoanProductCard = ({ product }: { product: LoanProduct }) => (
 );
 
 const SavingsComparisonDetails = ({ product, bestValues }: { 
-  product: SavingsProduct;
+  product: TransformedSavingsProduct;
   bestValues: any;
 }) => {
   const isBestRate = product.interestRate === bestValues.bestInterestRate;
@@ -362,7 +415,7 @@ const SavingsComparisonDetails = ({ product, bestValues }: {
 };
 
 const LoanComparisonDetails = ({ product, bestValues }: { 
-  product: LoanProduct;
+  product: TransformedLoanProduct;
   bestValues: any;
 }) => {
   const isBestRate = product.interestRate.min === bestValues.lowestInterestRate;

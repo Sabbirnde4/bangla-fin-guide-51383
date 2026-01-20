@@ -1,26 +1,20 @@
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   CreditCard, 
   Home,
   Car,
   Building,
   Search, 
-  Filter, 
-  Star,
-  ExternalLink,
-  CheckCircle,
-  Clock
+  Filter
 } from 'lucide-react';
-import { loanProducts, banks, getBankById, LoanProduct } from '@/data/mockData';
-import { formatCurrency, formatPercentage } from '@/utils/calculations';
 import { ProductComparison } from '@/components/ProductComparison';
 
 const LoansPage = () => {
@@ -31,17 +25,70 @@ const LoansPage = () => {
   const [maxTenure, setMaxTenure] = useState('');
   const [activeTab, setActiveTab] = useState('all');
 
-  const loanTypeIcons = {
-    personal: CreditCard,
-    home: Home,
-    car: Car,
-    business: Building,
-    student: CreditCard,
-    startup: Building
+  // Fetch loan products from Supabase
+  const { data: loanProducts, isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['loan_products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('loan_products')
+        .select('*')
+        .order('interest_rate_min', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch banks from Supabase
+  const { data: banks, isLoading: isLoadingBanks } = useQuery({
+    queryKey: ['banks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('banks')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const isLoading = isLoadingProducts || isLoadingBanks;
+
+  // Helper function to get bank by ID
+  const getBankById = (bankId: string) => {
+    return banks?.find(bank => bank.id === bankId);
   };
 
+  // Transform products to match expected format for ProductComparison
+  const transformedProducts = useMemo(() => {
+    if (!loanProducts) return [];
+    
+    return loanProducts.map(product => ({
+      id: product.id,
+      bankId: product.bank_id,
+      productName: product.product_name,
+      loanType: product.loan_type,
+      interestRate: {
+        min: product.interest_rate_min,
+        max: product.interest_rate_max
+      },
+      loanAmount: {
+        min: product.loan_amount_min,
+        max: product.loan_amount_max
+      },
+      tenure: {
+        min: product.tenure_min,
+        max: product.tenure_max
+      },
+      processingFee: product.processing_fee,
+      processingTime: product.processing_time || '3-5 business days',
+      features: product.features || [],
+      eligibility: product.eligibility || [],
+      requiredDocuments: product.required_documents || []
+    }));
+  }, [loanProducts]);
+
   const filteredAndSortedProducts = useMemo(() => {
-    let products = loanProducts.filter(product => {
+    let products = transformedProducts.filter(product => {
       const bank = getBankById(product.bankId);
       const matchesSearch = product.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            bank?.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -71,7 +118,7 @@ const LoansPage = () => {
     });
 
     return products;
-  }, [searchTerm, sortBy, filterBank, maxAmount, maxTenure, activeTab]);
+  }, [transformedProducts, searchTerm, sortBy, filterBank, maxAmount, maxTenure, activeTab, banks]);
 
   const loanTypes = [
     { id: 'all', name: 'All Loans', icon: CreditCard },
@@ -152,7 +199,7 @@ const LoansPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Banks</SelectItem>
-                  {banks.map(bank => (
+                  {banks?.map(bank => (
                     <SelectItem key={bank.id} value={bank.id}>{bank.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -182,20 +229,41 @@ const LoansPage = () => {
         </CardContent>
       </Card>
 
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <Skeleton className="h-12 w-12 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-1/4" />
+                  </div>
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* Product Comparison */}
+          <ProductComparison type="loans" products={filteredAndSortedProducts} />
 
-      {/* Product Comparison */}
-      <ProductComparison type="loans" products={filteredAndSortedProducts} />
-
-      {filteredAndSortedProducts.length === 0 && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No loans found</h3>
-            <p className="text-muted-foreground">
-              Try adjusting your search criteria or filters
-            </p>
-          </CardContent>
-        </Card>
+          {filteredAndSortedProducts.length === 0 && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No loans found</h3>
+                <p className="text-muted-foreground">
+                  Try adjusting your search criteria or filters
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );
