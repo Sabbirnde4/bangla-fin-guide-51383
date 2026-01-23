@@ -24,7 +24,7 @@ const SavingsPage = () => {
   const { data: savingsProducts, isLoading: isLoadingProducts } = useQuery({
     queryKey: ['savings_products'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('savings_products')
         .select('*')
         .order('interest_rate', { ascending: false });
@@ -37,7 +37,7 @@ const SavingsPage = () => {
   const { data: banks, isLoading: isLoadingBanks } = useQuery({
     queryKey: ['banks'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('banks')
         .select('*')
         .order('name');

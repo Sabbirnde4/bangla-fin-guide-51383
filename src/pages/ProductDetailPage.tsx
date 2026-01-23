@@ -39,7 +39,7 @@ export default function ProductDetailPage() {
   const { data: product, isLoading: productLoading } = useQuery({
     queryKey: [tableName, id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from(tableName)
         .select('*, banks(name, website, rating, total_branches)')
         .eq('id', id)

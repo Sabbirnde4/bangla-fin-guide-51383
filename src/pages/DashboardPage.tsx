@@ -56,7 +56,7 @@ export default function DashboardPage() {
 
   const fetchUserData = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_favorites')
         .select(`
           id,
@@ -75,11 +75,11 @@ export default function DashboardPage() {
   const fetchStats = async () => {
     try {
       const [banksResponse, productsResponse] = await Promise.all([
-        supabase.from('banks').select('*', { count: 'exact' }),
-        supabase.from('loan_products').select('interest_rate_min, interest_rate_max', { count: 'exact' })
+        (supabase as any).from('banks').select('*', { count: 'exact' }),
+        (supabase as any).from('loan_products').select('interest_rate_min, interest_rate_max', { count: 'exact' })
       ]);
 
-      const avgProductRate = productsResponse.data?.reduce((sum, product) => sum + ((product.interest_rate_min + product.interest_rate_max) / 2), 0) / (productsResponse.data?.length || 1) || 0;
+      const avgProductRate = productsResponse.data?.reduce((sum: number, product: any) => sum + ((product.interest_rate_min + product.interest_rate_max) / 2), 0) / (productsResponse.data?.length || 1) || 0;
 
       setStats({
         totalFavorites: favorites.length,
@@ -94,7 +94,7 @@ export default function DashboardPage() {
 
   const removeFavorite = async (favoriteId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_favorites')
         .delete()
         .eq('id', favoriteId);

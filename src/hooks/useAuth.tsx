@@ -45,12 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(async () => {
             try {
               const [profileResponse, rolesResponse] = await Promise.all([
-                supabase
+                (supabase as any)
                   .from('profiles')
                   .select('*')
                   .eq('user_id', session.user.id)
                   .maybeSingle(),
-                supabase
+                (supabase as any)
                   .from('user_roles')
                   .select('role')
                   .eq('user_id', session.user.id)

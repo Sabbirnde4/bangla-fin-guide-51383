@@ -103,17 +103,17 @@ export default function AdminPage() {
   const fetchData = async () => {
     try {
       const [banksResponse, productsResponse, usersResponse, favoritesResponse] = await Promise.all([
-        supabase.from('banks').select('*').order('created_at', { ascending: false }),
-        supabase.from('loan_products').select('*, banks(name)').order('created_at', { ascending: false }),
-        supabase.from('profiles').select('user_id, first_name, last_name, created_at'),
-        supabase.from('user_favorites').select('id')
+        (supabase as any).from('banks').select('*').order('created_at', { ascending: false }),
+        (supabase as any).from('loan_products').select('*, banks(name)').order('created_at', { ascending: false }),
+        (supabase as any).from('profiles').select('user_id, first_name, last_name, created_at'),
+        (supabase as any).from('user_favorites').select('id')
       ]);
 
       setBanks(banksResponse.data || []);
       setLoanProducts(productsResponse.data || []);
       
       // Get user roles separately
-      const { data: rolesData } = await supabase
+      const { data: rolesData } = await (supabase as any)
         .from('user_roles')
         .select('user_id, role');
       
@@ -175,15 +175,15 @@ export default function AdminPage() {
   const handleSaveBank = async (bankData: Partial<Bank>) => {
     try {
       if (editingItem) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('banks')
           .update(bankData)
           .eq('id', editingItem.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('banks')
-          .insert([bankData as any]);
+          .insert([bankData]);
         if (error) throw error;
       }
       
@@ -207,15 +207,15 @@ export default function AdminPage() {
   const handleSaveLoanProduct = async (productData: Partial<LoanProduct>) => {
     try {
       if (editingItem) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('loan_products')
           .update(productData)
           .eq('id', editingItem.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('loan_products')
-          .insert([productData as any]);
+          .insert([productData]);
         if (error) throw error;
       }
       
@@ -238,7 +238,7 @@ export default function AdminPage() {
 
   const handleDelete = async (table: 'banks' | 'loan_products', id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from(table)
         .delete()
         .eq('id', id);
@@ -262,7 +262,7 @@ export default function AdminPage() {
 
   const handleRoleChange = async (userId: string, newRole: 'admin' | 'user') => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_roles')
         .update({ role: newRole })
         .eq('user_id', userId);
