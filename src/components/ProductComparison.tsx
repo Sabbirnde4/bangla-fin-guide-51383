@@ -60,11 +60,11 @@ export const ProductComparison = ({ type, products }: ProductComparisonProps) =>
   const { data: banks } = useQuery({
     queryKey: ['banks'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('banks')
         .select('id, name');
       if (error) throw error;
-      return data || [];
+      return (data || []) as { id: string; name: string }[];
     },
   });
 

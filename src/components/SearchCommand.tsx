@@ -14,6 +14,47 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Local interfaces for type safety
+interface Bank {
+  id: string;
+  name: string;
+  rating: number | null;
+  total_branches: number | null;
+  established: number | null;
+}
+
+interface Nbfi {
+  id: string;
+  name: string;
+  rating: number | null;
+  total_branches: number | null;
+  type: string | null;
+}
+
+interface Ngo {
+  id: string;
+  name: string;
+  rating: number | null;
+  focus: string[] | null;
+}
+
+interface SavingsProductWithBank {
+  id: string;
+  product_name: string;
+  interest_rate: number;
+  minimum_deposit: number | null;
+  banks: { name: string } | null;
+}
+
+interface LoanProductWithBank {
+  id: string;
+  product_name: string;
+  interest_rate_min: number | null;
+  interest_rate_max: number | null;
+  loan_type: string | null;
+  banks: { name: string } | null;
+}
+
 export function SearchCommand() {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,60 +75,60 @@ export function SearchCommand() {
   const { data: banks, isLoading: banksLoading } = useQuery({
     queryKey: ["banks"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("banks")
         .select("*")
         .order("rating", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data || []) as Bank[];
     },
   });
 
   const { data: savingsProducts, isLoading: savingsLoading } = useQuery({
     queryKey: ["savings_products"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("savings_products")
         .select("*, banks(name)")
         .order("interest_rate", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data || []) as SavingsProductWithBank[];
     },
   });
 
   const { data: loanProducts, isLoading: loansLoading } = useQuery({
     queryKey: ["loan_products"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("loan_products")
         .select("*, banks(name)")
         .order("interest_rate_min", { ascending: true });
       if (error) throw error;
-      return data;
+      return (data || []) as LoanProductWithBank[];
     },
   });
 
   const { data: nbfis, isLoading: nbfisLoading } = useQuery({
     queryKey: ["nbfis"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("nbfis")
         .select("*")
         .order("rating", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data || []) as Nbfi[];
     },
   });
 
   const { data: ngos, isLoading: ngosLoading } = useQuery({
     queryKey: ["ngos"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("ngos")
         .select("*")
         .order("rating", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data || []) as Ngo[];
     },
   });
 

@@ -29,7 +29,7 @@ const LoansPage = () => {
   const { data: loanProducts, isLoading: isLoadingProducts } = useQuery({
     queryKey: ['loan_products'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('loan_products')
         .select('*')
         .order('interest_rate_min', { ascending: true });
@@ -42,7 +42,7 @@ const LoansPage = () => {
   const { data: banks, isLoading: isLoadingBanks } = useQuery({
     queryKey: ['banks'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('banks')
         .select('*')
         .order('name');

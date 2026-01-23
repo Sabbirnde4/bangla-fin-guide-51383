@@ -194,7 +194,7 @@ export default function DataUpload() {
       for (let i = 0; i < mappedData.length; i += batchSize) {
         const batch = mappedData.slice(i, i + batchSize);
         
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from(dataType)
           .upsert(batch, { onConflict: 'id' });
 

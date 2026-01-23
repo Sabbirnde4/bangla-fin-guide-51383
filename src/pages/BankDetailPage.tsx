@@ -35,7 +35,7 @@ export default function BankDetailPage() {
   const { data: bank, isLoading: bankLoading } = useQuery({
     queryKey: ['bank', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('banks')
         .select('*')
         .eq('id', id)
@@ -48,24 +48,24 @@ export default function BankDetailPage() {
   const { data: savingsProducts, isLoading: savingsLoading } = useQuery({
     queryKey: ['savings_products', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('savings_products')
         .select('*')
         .eq('bank_id', id);
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
   const { data: loanProducts, isLoading: loansLoading } = useQuery({
     queryKey: ['loan_products', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('loan_products')
         .select('*')
         .eq('bank_id', id);
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
