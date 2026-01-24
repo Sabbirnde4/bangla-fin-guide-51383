@@ -16,6 +16,17 @@ import {
   Filter
 } from 'lucide-react';
 import { ProductComparison } from '@/components/ProductComparison';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+
+const ITEMS_PER_PAGE = 20;
 
 const LoansPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,6 +35,7 @@ const LoansPage = () => {
   const [maxAmount, setMaxAmount] = useState('');
   const [maxTenure, setMaxTenure] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch loan products from Supabase
   const { data: loanProducts, isLoading: isLoadingProducts } = useQuery({
@@ -119,6 +131,34 @@ const LoansPage = () => {
 
     return products;
   }, [transformedProducts, searchTerm, sortBy, filterBank, maxAmount, maxTenure, activeTab, banks]);
+
+  // Reset to page 1 when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, filterBank, maxAmount, maxTenure, activeTab]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredAndSortedProducts, currentPage]);
+
+  const getPageNumbers = () => {
+    const pages: (number | 'ellipsis')[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('ellipsis');
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        pages.push(i);
+      }
+      if (currentPage < totalPages - 2) pages.push('ellipsis');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   const loanTypes = [
     { id: 'all', name: 'All Loans', icon: CreditCard },
@@ -229,10 +269,17 @@ const LoansPage = () => {
         </CardContent>
       </Card>
 
+      {/* Results count */}
+      {!isLoading && filteredAndSortedProducts.length > 0 && (
+        <div className="mb-4 text-sm text-muted-foreground">
+          Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredAndSortedProducts.length)} of {filteredAndSortedProducts.length} products
+        </div>
+      )}
+
       {/* Loading State */}
       {isLoading ? (
         <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <Card key={i}>
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4">
@@ -250,7 +297,7 @@ const LoansPage = () => {
       ) : (
         <>
           {/* Product Comparison */}
-          <ProductComparison type="loans" products={filteredAndSortedProducts} />
+          <ProductComparison type="loans" products={paginatedProducts} />
 
           {filteredAndSortedProducts.length === 0 && (
             <Card>
@@ -262,6 +309,43 @@ const LoansPage = () => {
                 </p>
               </CardContent>
             </Card>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-8">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  {getPageNumbers().map((page, index) => (
+                    <PaginationItem key={index}>
+                      {page === 'ellipsis' ? (
+                        <PaginationEllipsis />
+                      ) : (
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      )}
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           )}
         </>
       )}
