@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Building2,
   ExternalLink,
@@ -25,6 +26,7 @@ import { ReviewStats } from '@/components/reviews/ReviewStats';
 import { AlertForm } from '@/components/alerts/AlertForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export default function BankDetailPage() {
   const { id } = useParams();
@@ -219,8 +221,24 @@ export default function BankDetailPage() {
 
   if (bankLoading) {
     return (
-      <div className="container mx-auto p-6 flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="container mx-auto py-8">
+        <Skeleton className="h-6 w-48 mb-6" />
+        <Card className="mb-8">
+          <CardContent className="p-8">
+            <div className="flex items-start gap-6">
+              <Skeleton className="w-24 h-24 rounded-lg" />
+              <div className="flex-1 space-y-4">
+                <Skeleton className="h-10 w-64" />
+                <div className="flex gap-4">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-5 w-24" />
+                </div>
+                <Skeleton className="h-10 w-40" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -245,14 +263,14 @@ export default function BankDetailPage() {
     );
   }
 
+  const breadcrumbItems = [
+    { label: 'Banks', href: '/banks' },
+    { label: bank.name },
+  ];
+
   return (
     <div className="container mx-auto py-8">
-      <Button variant="ghost" asChild className="mb-6">
-        <Link to="/banks">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Banks
-        </Link>
-      </Button>
+      <Breadcrumbs items={breadcrumbItems} className="mb-6" />
 
       {/* Bank Header */}
       <Card className="mb-8">
