@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import SavingsPage from "./pages/SavingsPage";
 import LoansPage from "./pages/LoansPage";
@@ -27,31 +28,33 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <main className="flex-1">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/savings" element={<SavingsPage />} />
-                  <Route path="/savings/:id" element={<ProductDetailPage />} />
-                  <Route path="/loans" element={<LoansPage />} />
-                  <Route path="/loans/:id" element={<ProductDetailPage />} />
-                  <Route path="/banks" element={<BanksPage />} />
-                  <Route path="/banks/:id" element={<BankDetailPage />} />
-                  <Route path="/calculators" element={<CalculatorsPage />} />
-                  <Route path="/alerts" element={<AlertsPage />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/admin" element={<AdminPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
-          </BrowserRouter>
+          <ErrorBoundary>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="flex-1">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/savings" element={<SavingsPage />} />
+                    <Route path="/savings/:id" element={<ProductDetailPage />} />
+                    <Route path="/loans" element={<LoansPage />} />
+                    <Route path="/loans/:id" element={<ProductDetailPage />} />
+                    <Route path="/banks" element={<BanksPage />} />
+                    <Route path="/banks/:id" element={<BankDetailPage />} />
+                    <Route path="/calculators" element={<CalculatorsPage />} />
+                    <Route path="/alerts" element={<AlertsPage />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/admin" element={<AdminPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+                <Footer />
+              </div>
+            </BrowserRouter>
+          </ErrorBoundary>
         </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>

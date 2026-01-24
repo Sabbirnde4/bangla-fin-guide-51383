@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft,
   TrendingUp,
@@ -23,6 +24,7 @@ import { ReviewStats } from '@/components/reviews/ReviewStats';
 import { AlertForm } from '@/components/alerts/AlertForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 type ProductType = 'savings' | 'loans';
 
@@ -197,8 +199,23 @@ export default function ProductDetailPage() {
 
   if (productLoading) {
     return (
-      <div className="container mx-auto p-6 flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="container mx-auto py-8 max-w-5xl">
+        <Skeleton className="h-6 w-64 mb-6" />
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-5 w-40" />
+              </div>
+              <Skeleton className="h-10 w-28" />
+            </div>
+          </CardHeader>
+        </Card>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card><CardContent className="p-6"><Skeleton className="h-40" /></CardContent></Card>
+          <Card><CardContent className="p-6"><Skeleton className="h-40" /></CardContent></Card>
+        </div>
       </div>
     );
   }
@@ -223,14 +240,14 @@ export default function ProductDetailPage() {
     );
   }
 
+  const breadcrumbItems = [
+    { label: isSavings ? 'Savings' : 'Loans', href: `/${type}` },
+    { label: product.product_name },
+  ];
+
   return (
     <div className="container mx-auto py-8 max-w-5xl">
-      <Button variant="ghost" asChild className="mb-6">
-        <Link to={`/${type}`}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to {isSavings ? 'Savings' : 'Loans'}
-        </Link>
-      </Button>
+      <Breadcrumbs items={breadcrumbItems} className="mb-6" />
 
       {/* Product Header */}
       <Card className="mb-8">

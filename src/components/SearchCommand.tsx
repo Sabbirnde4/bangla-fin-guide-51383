@@ -204,7 +204,7 @@ export function SearchCommand() {
                 <CommandItem
                   key={bank.id}
                   value={bank.name}
-                  onSelect={() => handleSelect(() => navigate(`/banks`))}
+                  onSelect={() => handleSelect(() => navigate(`/banks/${bank.id}`))}
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
@@ -291,7 +291,7 @@ export function SearchCommand() {
                 <CommandItem
                   key={product.id}
                   value={`${product.product_name} ${product.banks?.name || ''}`}
-                  onSelect={() => handleSelect(() => navigate(`/savings`))}
+                  onSelect={() => handleSelect(() => navigate(`/savings/${product.id}`))}
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
@@ -323,7 +323,7 @@ export function SearchCommand() {
                 <CommandItem
                   key={product.id}
                   value={`${product.product_name} ${product.banks?.name || ''} ${product.loan_type || ''}`}
-                  onSelect={() => handleSelect(() => navigate(`/loans`))}
+                  onSelect={() => handleSelect(() => navigate(`/loans/${product.id}`))}
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
