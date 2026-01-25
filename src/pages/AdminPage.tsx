@@ -15,9 +15,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { 
   Plus, Edit, Trash2, Users, Building, CreditCard, Search, 
   TrendingUp, Activity, Shield, Database, Eye, Settings,
-  UserCheck, UserX, AlertTriangle, CheckCircle
+  UserCheck, UserX, AlertTriangle, CheckCircle, MessageSquare, Bell
 } from 'lucide-react';
 import DataUpload from '@/components/admin/DataUpload';
+import AdminReviewsTab from '@/components/admin/AdminReviewsTab';
+import AdminAnalyticsTab from '@/components/admin/AdminAnalyticsTab';
+import AdminAlertsTab from '@/components/admin/AdminAlertsTab';
 
 interface Bank {
   id: string;
@@ -357,26 +360,34 @@ export default function AdminPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
-            Overview
+            <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
           <TabsTrigger value="banks" className="flex items-center gap-2">
             <Building className="h-4 w-4" />
-            Banks
+            <span className="hidden sm:inline">Banks</span>
           </TabsTrigger>
           <TabsTrigger value="products" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
-            Products
+            <span className="hidden sm:inline">Products</span>
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Users
+            <span className="hidden sm:inline">Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="reviews" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">Reviews</span>
+          </TabsTrigger>
+          <TabsTrigger value="alerts" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Alerts</span>
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Analytics
+            <span className="hidden sm:inline">Analytics</span>
           </TabsTrigger>
         </TabsList>
 
@@ -856,154 +867,19 @@ export default function AdminPage() {
           </div>
         </TabsContent>
 
+        {/* Reviews Tab */}
+        <TabsContent value="reviews">
+          <AdminReviewsTab />
+        </TabsContent>
+
+        {/* Alerts Management Tab */}
+        <TabsContent value="alerts">
+          <AdminAlertsTab />
+        </TabsContent>
+
         {/* Analytics Tab */}
-        <TabsContent value="analytics" className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">Analytics & Insights</h2>
-            <p className="text-muted-foreground">Detailed analytics and trends</p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Interest Rate Trends</CardTitle>
-                <CardDescription>Average rates across all banks</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={banks.map(bank => ({ 
-                    name: bank.name.substring(0, 10), 
-                    rating: bank.rating || 0 
-                  }))}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="rating" stroke="hsl(var(--primary))" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Types Distribution</CardTitle>
-                <CardDescription>Breakdown by loan product types</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={Object.entries(
-                        loanProducts.reduce((acc, product) => {
-                          acc[product.loan_type] = (acc[product.loan_type] || 0) + 1;
-                          return acc;
-                        }, {} as Record<string, number>)
-                      ).map(([type, count]) => ({ name: type, value: count }))}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {Object.keys(loanProducts.reduce((acc, product) => {
-                        acc[product.loan_type] = (acc[product.loan_type] || 0) + 1;
-                        return acc;
-                      }, {} as Record<string, number>)).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>Platform Health</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Database</span>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-green-500">Healthy</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Authentication</span>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-green-500">Active</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">API Services</span>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-green-500">Running</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Stats</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Highest Rating</span>
-                    <span className="font-medium">
-                      {banks.length > 0 ? Math.max(...banks.map(b => b.rating || 0)).toFixed(1) : '0'}/5
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Lowest Rating</span>
-                    <span className="font-medium">
-                      {banks.length > 0 ? Math.min(...banks.filter(b => b.rating).map(b => b.rating || 0)).toFixed(1) : '0'}/5
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Total Branches</span>
-                    <span className="font-medium">
-                      {banks.reduce((sum, b) => sum + (b.total_branches || 0), 0).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 bg-primary rounded-full"></div>
-                    <span className="text-sm">System startup</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm">Admin login</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm">Data refresh</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="analytics">
+          <AdminAnalyticsTab />
         </TabsContent>
       </Tabs>
 
