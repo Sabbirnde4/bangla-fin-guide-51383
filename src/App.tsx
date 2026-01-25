@@ -20,6 +20,12 @@ import AdminPage from "./pages/AdminPage";
 import BankDetailPage from "./pages/BankDetailPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
+import ContactPage from "./pages/ContactPage";
+import FAQPage from "./pages/FAQPage";
+import AboutPage from "./pages/AboutPage";
+import DisclaimerPage from "./pages/DisclaimerPage";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +54,12 @@ const App = () => (
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/admin" element={<AdminPage />} />
+                    <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                    <Route path="/terms" element={<TermsOfServicePage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/faq" element={<FAQPage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/disclaimer" element={<DisclaimerPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
