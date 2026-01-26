@@ -89,6 +89,188 @@ export type Database = {
         }
         Relationships: []
       }
+      banks: {
+        Row: {
+          created_at: string | null
+          established: number | null
+          id: string
+          logo: string | null
+          name: string
+          rating: number | null
+          total_branches: number | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          established?: number | null
+          id: string
+          logo?: string | null
+          name: string
+          rating?: number | null
+          total_branches?: number | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          established?: number | null
+          id?: string
+          logo?: string | null
+          name?: string
+          rating?: number | null
+          total_branches?: number | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      loan_products: {
+        Row: {
+          bank_id: string | null
+          created_at: string | null
+          eligibility: string[] | null
+          features: string[] | null
+          id: string
+          interest_rate_max: number | null
+          interest_rate_min: number | null
+          loan_amount_max: number | null
+          loan_amount_min: number | null
+          loan_type: string | null
+          processing_fee: number | null
+          processing_time: string | null
+          product_name: string
+          required_documents: string[] | null
+          tenure_max: number | null
+          tenure_min: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          bank_id?: string | null
+          created_at?: string | null
+          eligibility?: string[] | null
+          features?: string[] | null
+          id: string
+          interest_rate_max?: number | null
+          interest_rate_min?: number | null
+          loan_amount_max?: number | null
+          loan_amount_min?: number | null
+          loan_type?: string | null
+          processing_fee?: number | null
+          processing_time?: string | null
+          product_name: string
+          required_documents?: string[] | null
+          tenure_max?: number | null
+          tenure_min?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          bank_id?: string | null
+          created_at?: string | null
+          eligibility?: string[] | null
+          features?: string[] | null
+          id?: string
+          interest_rate_max?: number | null
+          interest_rate_min?: number | null
+          loan_amount_max?: number | null
+          loan_amount_min?: number | null
+          loan_type?: string | null
+          processing_fee?: number | null
+          processing_time?: string | null
+          product_name?: string
+          required_documents?: string[] | null
+          tenure_max?: number | null
+          tenure_min?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_products_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nbfis: {
+        Row: {
+          created_at: string | null
+          established: number | null
+          id: string
+          logo: string | null
+          name: string
+          rating: number | null
+          total_branches: number | null
+          type: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          established?: number | null
+          id: string
+          logo?: string | null
+          name: string
+          rating?: number | null
+          total_branches?: number | null
+          type?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          established?: number | null
+          id?: string
+          logo?: string | null
+          name?: string
+          rating?: number | null
+          total_branches?: number | null
+          type?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      ngos: {
+        Row: {
+          created_at: string | null
+          established: number | null
+          focus: string[] | null
+          id: string
+          logo: string | null
+          name: string
+          rating: number | null
+          total_branches: number | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          established?: number | null
+          focus?: string[] | null
+          id: string
+          logo?: string | null
+          name: string
+          rating?: number | null
+          total_branches?: number | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          established?: number | null
+          focus?: string[] | null
+          id?: string
+          logo?: string | null
+          name?: string
+          rating?: number | null
+          total_branches?: number | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           alert_id: string
@@ -159,6 +341,71 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      savings_products: {
+        Row: {
+          account_opening_fee: number | null
+          bank_id: string | null
+          compounding_frequency: string | null
+          created_at: string | null
+          eligibility: string[] | null
+          features: string[] | null
+          id: string
+          interest_rate: number
+          maintenance_fee: number | null
+          maximum_deposit: number | null
+          minimum_deposit: number | null
+          product_name: string
+          tenure_max: number | null
+          tenure_min: number | null
+          updated_at: string | null
+          withdrawal_fee: number | null
+        }
+        Insert: {
+          account_opening_fee?: number | null
+          bank_id?: string | null
+          compounding_frequency?: string | null
+          created_at?: string | null
+          eligibility?: string[] | null
+          features?: string[] | null
+          id: string
+          interest_rate: number
+          maintenance_fee?: number | null
+          maximum_deposit?: number | null
+          minimum_deposit?: number | null
+          product_name: string
+          tenure_max?: number | null
+          tenure_min?: number | null
+          updated_at?: string | null
+          withdrawal_fee?: number | null
+        }
+        Update: {
+          account_opening_fee?: number | null
+          bank_id?: string | null
+          compounding_frequency?: string | null
+          created_at?: string | null
+          eligibility?: string[] | null
+          features?: string[] | null
+          id?: string
+          interest_rate?: number
+          maintenance_fee?: number | null
+          maximum_deposit?: number | null
+          minimum_deposit?: number | null
+          product_name?: string
+          tenure_max?: number | null
+          tenure_min?: number | null
+          updated_at?: string | null
+          withdrawal_fee?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_products_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

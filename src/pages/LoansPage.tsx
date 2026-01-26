@@ -25,6 +25,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import { TermLabel } from '@/components/FinancialTermTooltip';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -218,7 +219,7 @@ const LoansPage = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Sort By</Label>
+              <TermLabel term="interestRate" label="Sort By" />
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger>
                   <SelectValue />
@@ -256,7 +257,7 @@ const LoansPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="maxTenure">Max Tenure (months)</Label>
+              <TermLabel term="tenure" label="Max Tenure (months)" />
               <Input
                 id="maxTenure"
                 type="number"
