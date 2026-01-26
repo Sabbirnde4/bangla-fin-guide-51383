@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, PiggyBank, CreditCard, TrendingUp } from 'lucide-react';
 import { calculateEMI, calculateROI, formatCurrency, formatPercentage } from '@/utils/calculations';
+import { TermLabel, FinancialTermTooltip } from '@/components/FinancialTermTooltip';
 
 export const QuickCalculator = () => {
   const [emiInputs, setEmiInputs] = useState({
@@ -49,7 +48,7 @@ export const QuickCalculator = () => {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="emi-principal">Loan Amount (BDT)</Label>
+                  <TermLabel term="principalAmount" label="Loan Amount (BDT)" />
                   <Input
                     id="emi-principal"
                     type="number"
@@ -61,7 +60,7 @@ export const QuickCalculator = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="emi-rate">Interest Rate (%)</Label>
+                  <TermLabel term="interestRate" label="Interest Rate (%)" />
                   <Input
                     id="emi-rate"
                     type="number"
@@ -74,7 +73,7 @@ export const QuickCalculator = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="emi-tenure">Tenure (Months)</Label>
+                  <TermLabel term="tenure" label="Tenure (Months)" />
                   <Input
                     id="emi-tenure"
                     type="number"
@@ -89,16 +88,18 @@ export const QuickCalculator = () => {
 
               <div className="space-y-4">
                 <div className="bg-primary/5 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-3">EMI Calculation Result</h4>
+                  <h4 className="font-semibold mb-3">
+                    <FinancialTermTooltip term="emi">EMI Calculation Result</FinancialTermTooltip>
+                  </h4>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>Monthly EMI:</span>
+                      <TermLabel term="emi" label="Monthly EMI:" showIcon={false} />
                       <span className="font-bold text-primary">
                         {formatCurrency(emiResult.monthlyEMI)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Total Interest:</span>
+                      <TermLabel term="totalInterest" label="Total Interest:" showIcon={false} />
                       <span className="font-medium">
                         {formatCurrency(emiResult.totalInterest)}
                       </span>
@@ -129,7 +130,7 @@ export const QuickCalculator = () => {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="roi-principal">Investment Amount (BDT)</Label>
+                  <TermLabel term="principalAmount" label="Investment Amount (BDT)" />
                   <Input
                     id="roi-principal"
                     type="number"
@@ -141,7 +142,7 @@ export const QuickCalculator = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="roi-rate">Interest Rate (%)</Label>
+                  <TermLabel term="interestRate" label="Interest Rate (%)" />
                   <Input
                     id="roi-rate"
                     type="number"
@@ -154,7 +155,7 @@ export const QuickCalculator = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="roi-tenure">Tenure (Months)</Label>
+                  <TermLabel term="tenure" label="Tenure (Months)" />
                   <Input
                     id="roi-tenure"
                     type="number"
@@ -169,22 +170,24 @@ export const QuickCalculator = () => {
 
               <div className="space-y-4">
                 <div className="bg-primary/5 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-3">ROI Calculation Result</h4>
+                  <h4 className="font-semibold mb-3">
+                    <FinancialTermTooltip term="roi">ROI Calculation Result</FinancialTermTooltip>
+                  </h4>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>Maturity Amount:</span>
+                      <TermLabel term="maturityAmount" label="Maturity Amount:" showIcon={false} />
                       <span className="font-bold text-primary">
                         {formatCurrency(roiResult.maturityAmount)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Total Interest:</span>
+                      <TermLabel term="totalInterest" label="Total Interest:" showIcon={false} />
                       <span className="font-medium">
                         {formatCurrency(roiResult.totalInterest)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Principal:</span>
+                      <TermLabel term="principalAmount" label="Principal:" showIcon={false} />
                       <span className="font-medium">
                         {formatCurrency(roiInputs.principal)}
                       </span>
